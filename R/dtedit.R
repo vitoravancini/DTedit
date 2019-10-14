@@ -82,7 +82,10 @@
 #'        feature. For developers, a message is printed using the warning function.
 #' @param datatable.options options passed to \code{\link{DT::renderDataTable}}.
 #'        See \link{https://rstudio.github.io/DT/options.html} for more information.
+#' @param datatable.resetPaging option passed to \code{\link{DT::replaceData}}.
+#'        See documentation for more information.
 #' @export
+#' 
 dtedit <- function(input, output, name, thedata,
 				   view.cols = names(thedata),
 				   edit.cols = names(thedata),
@@ -118,10 +121,10 @@ dtedit <- function(input, output, name, thedata,
 				   callback.insert = function(data, row) { },
 				   click.time.threshold = 2, # in seconds
 				   datatable.options = list(pageLength=defaultPageLength),
-				   session = NULL
+				   session = NULL,
+				   datatable.resetPaging = FALSE
 ) {
 
-  print(callback.update)
   # Some basic parameter checking
 	if(!is.data.frame(thedata) | ncol(thedata) < 1) {
 		stop('Must provide a data frame with at least one column.')
@@ -270,7 +273,7 @@ dtedit <- function(input, output, name, thedata,
 				data[,i] <- sapply(data[,i], FUN = function(x) { paste0(x, collapse = ', ') })
 			}
 		}
-		DT::replaceData(proxy, data, ...)
+		DT::replaceData(proxy, data, ..., resetPaging = datatable.resetPaging)
 	}
 
 	##### Insert functions #####################################################
