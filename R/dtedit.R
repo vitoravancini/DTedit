@@ -121,6 +121,7 @@ dtedit <- function(input, output, name, thedata,
 				   callback.insert = function(data, row) { },
 				   callback.save = function() {},
 				   click.time.threshold = 2, # in seconds
+				   datatable.colnames = names(thedata),
 				   datatable.options = list(pageLength=defaultPageLength),
 				   session = NULL,
 				   datatable.resetPaging = FALSE
@@ -188,7 +189,7 @@ dtedit <- function(input, output, name, thedata,
 
 	output[[DataTableName]] <- DT::renderDataTable({
 		thedata[,view.cols]
-	}, options = datatable.options, server=TRUE, selection='single', rownames=FALSE)
+	}, options = datatable.options, server=TRUE, selection='single', rownames=FALSE, colnames = datatable.colnames)
 
 	getFields <- function(typeName, values) {
 		fields <- list()
