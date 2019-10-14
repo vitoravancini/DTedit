@@ -116,6 +116,7 @@ dtedit <- function(input, output, name, thedata,
 				   callback.delete = function(data, row) { },
 				   callback.update = function(data, olddata, row) { },
 				   callback.insert = function(data, row) { },
+				   callback.save = function() {},
 				   click.time.threshold = 2, # in seconds
 				   datatable.options = list(pageLength=defaultPageLength),
 				   session = NULL
@@ -477,6 +478,11 @@ dtedit <- function(input, output, name, thedata,
 	  shiny::showModal(saveModal(session))
 	})
 	
+	
+	observeEvent(input$confirm_save,{
+	  callback.save()
+	  shiny::removeModal()
+	})
 	
 	##### Build the UI for the DataTable and buttons ###########################
 
