@@ -222,7 +222,7 @@ dtedit <- function(input, output, name, thedata,
 					warning(paste0('No choices available for ', edit.cols[i],
 								   '. Specify them using the input.choices parameter'))
 				}
-				fields[[i]] <- selectInputMultiple(paste0(name, typeName, edit.cols[i]),
+				fields[[i]] <- selectInputMultiple(ns(paste0(name, typeName, edit.cols[i])),
 										   label=edit.label.cols[i],
 										   choices=choices,
 										   selected=value,
@@ -230,20 +230,20 @@ dtedit <- function(input, output, name, thedata,
 
 			} else if(inputTypes[i] == 'selectInput') {
 				value <- ifelse(missing(values), '', as.character(values[,edit.cols[i]]))
-				fields[[i]] <- shiny::selectInput(paste0(name, typeName, edit.cols[i]),
+				fields[[i]] <- shiny::selectInput(ns(paste0(name, typeName, edit.cols[i])),
 										   label=edit.label.cols[i],
 										   choices=levels(result$thedata[,edit.cols[i]]),
 										   selected=value,
 										   width=select.width)
 			} else if(inputTypes[i] == 'numericInput') {
 				value <- ifelse(missing(values), 0, values[,edit.cols[i]])
-				fields[[i]] <- shiny::numericInput(paste0(name, typeName, edit.cols[i]),
+				fields[[i]] <- shiny::numericInput(ns(paste0(name, typeName, edit.cols[i])),
 											label=edit.label.cols[i],
 											value=value,
 											width=numeric.width)
 			} else if(inputTypes[i] == 'textAreaInput') {
 				value <- ifelse(missing(values), '', values[,edit.cols[i]])
-				fields[[i]] <- shiny::textAreaInput(paste0(name, typeName, edit.cols[i]),
+				fields[[i]] <- shiny::textAreaInput(ns(paste0(name, typeName, edit.cols[i])),
 											 label=edit.label.cols[i],
 											 value=value,
 											 width=textarea.width, height=textarea.height)
@@ -255,7 +255,7 @@ dtedit <- function(input, output, name, thedata,
 										 width=text.width)
 			} else if(inputTypes[i] == 'passwordInput') {
 				value <- ifelse(missing(values), '', values[,edit.cols[i]])
-				fields[[i]] <- shiny::passwordInput(paste0(name, typeName, edit.cols[i]),
+				fields[[i]] <- shiny::passwordInput(ns(paste0(name, typeName, edit.cols[i])),
 										 label=edit.label.cols[i],
 										 value=value,
 										 width=text.width)
