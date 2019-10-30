@@ -104,6 +104,7 @@ dtedit <- function(input, output, name, thedata,
 				   title.delete = 'Delete',
 				   title.edit = 'Edit',
 				   title.add = 'New',
+				   title.import = 'Import',
 				   label.delete = 'Delete',
 				   label.edit = 'Edit',
 				   label.add = 'New',
@@ -111,14 +112,24 @@ dtedit <- function(input, output, name, thedata,
 				   label.save = 'Save',
 				   label.cancel= 'Cancel',
 				   label.confirm = 'Confirm',
+				   label.import = 'Import',
+				   label.import.quote = "Quote",
+				   label.import.quote.single = "Single quote",
+				   label.import.quote.double = "Double quote",
+				   label.import.separator = "Separator",
+				   label.import.separator.comma = "Separator",
+				   label.import.separator.Semicolon = "Semicolon",
+				   label.import.separator.tab = "Tab",
 				   show.update = TRUE,
 				   show.insert = TRUE,
 				   show.copy = TRUE,
 				   show.delete=TRUE,
 				   show.save=FALSE,
+				   show.import=FALSE,
 				   callback.delete = function(data, row) { },
 				   callback.update = function(data, olddata, row) { },
 				   callback.insert = function(data, row) { },
+				   callback.import = function(data){},
 				   callback.save = function() {},
 				   click.time.threshold = 2, # in seconds
 				   datatable.colnames = names(thedata),
@@ -232,9 +243,10 @@ dtedit <- function(input, output, name, thedata,
 				value <- ifelse(missing(values), '', as.character(values[,edit.cols[i]]))
 				fields[[i]] <- shiny::selectInput(ns(paste0(name, typeName, edit.cols[i])),
 										   label=edit.label.cols[i],
-										   choices=levels(result$thedata[,edit.cols[i]]),
+										   choices=result$thedata[,edit.cols[i]],
 										   selected=value,
 										   width=select.width)
+				# TODO MAKE INPUT CHOICES WORKS
 			} else if(inputTypes[i] == 'numericInput') {
 				value <- ifelse(missing(values), 0, values[,edit.cols[i]])
 				fields[[i]] <- shiny::numericInput(ns(paste0(name, typeName, edit.cols[i])),
@@ -329,6 +341,8 @@ dtedit <- function(input, output, name, thedata,
 	addModal <- function(row, values) {
 		output[[paste0(name, '_message')]] <- shiny::renderText('')
 		fields <- getFields('_add_', values)
+		# print(values)
+		print('----------------')
 		shiny::modalDialog(title = title.add,
 					shiny::div(shiny::textOutput(paste0(name, '_message')), style='color:red'),
 					fields,
@@ -350,6 +364,69 @@ dtedit <- function(input, output, name, thedata,
 		}
 	})
 
+	##### Import functions #####################################################
+	
+	##TODO: Pass import.seperator, import.header and import.quote as label parameters
+	importModal <- function(){
+	  shiny::modalDialog(title = title.import,
+	                     shiny::div(shiny::textOutput(paste0(name, '_message')), style='color:red'),
+	                     fileInput(ns("import_data"), "Choose CSV File",
+	                               multiple = FALSE,
+	                               accept = c("text/csv",
+	                                          "text/comma-separated-values,text/plain",
+	                                          ".csv")),
+	                     tags$hr(),
+	                     # Input: Select separator ----
+	                     radioButtons(ns("sep"), label.import.separator,
+	                                  choices = list(
+	                                              "Virgula" = ",",
+	                                              "Ponto e Virgula" = ";",
+	                                              "Tab" = "\t"),
+	                                  selected = ","),
+	                     
+	                     # Input: Select quotes ----
+	                     radioButtons(ns("quote"), label.import.quote,
+	                                  choices = list(None = "",
+	                                              "Aspas Dupla" = '"',
+	                                              "Aspas Simples" = "'"),
+	                                  selected = '"'),
+	                     
+	                     footer = shiny::column(shiny::modalButton(label.cancel),
+	                                            shiny::actionButton(ns(paste0(name, '_insert_import')), label.save),
+	                                            width=12),
+	                     size = modal.size
+	  )
+	}
+	observeEvent(input[[paste0(name, '_import')]], {
+	  shiny::showModal(importModal())
+	})
+	
+	observeEvent(input[[paste0(name, '_insert_import')]], {
+	  print('Running CallBackImport')
+	  req(input$import_data)
+	  df <- read.csv(input$import_data$datapath,
+	                 header = TRUE,
+	                 sep = input$sep,
+	                 quote = input$quote,
+	                 stringsAsFactors = FALSE)
+	  tryCatch({
+	    callback.data <- callback.import(df,thedata)
+	    if(!is.null(callback.data) & is.data.frame(callback.data)) {
+	      result$thedata <- callback.data
+	    } else {
+	      result$thedata <- newdata
+	    }
+	    updateData(dt.proxy,
+	               result$thedata[,view.cols],
+	               rownames = FALSE)
+	    shiny::removeModal()
+	    return(TRUE)
+	  }, error = function(e) {
+	    output[[paste0(name, '_message')]] <<- shiny::renderText(geterrmessage())
+	    return(FALSE)
+	  })
+	  removeModal()
+	})
 	##### Update functions #####################################################
 
 	observeEvent(input[[paste0(name, '_edit')]], {
@@ -484,7 +561,7 @@ dtedit <- function(input, output, name, thedata,
 	
 	
 	observeEvent(input$confirm_save,{
-	  callback.save()
+	  callback.save(result$thedata)
 	  shiny::removeModal()
 	})
 	
@@ -498,6 +575,7 @@ dtedit <- function(input, output, name, thedata,
 			if(show.delete) { shiny::actionButton(ns(paste0(name, '_remove')), label.delete) },
 			if(show.copy) { shiny::actionButton(ns(paste0(name, '_copy')), label.copy) },
 			if(show.save) { shiny::actionButton(ns(paste0(name, '_save')), label.save) },
+			if(show.import) { shiny::actionButton(ns(paste0(name, '_import')), label.import) },
 			shiny::br(), shiny::br(), DT::dataTableOutput(ns(DataTableName))
 		)
 	})
